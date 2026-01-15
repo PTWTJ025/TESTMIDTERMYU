@@ -6,31 +6,9 @@ function normalizeQuestionText(text) {
     .trim();
 }
 
-function normalizeChoiceText(rawText, totalChoices) {
-  // ตัด A. / B. / C. / D. / E. / F. หรือ a) / b) / c) / d) / e) / f) นำหน้า (ครอบคลุมทุกรูปแบบ)
-  let text = rawText
-    .replace(/^\s*[A-F]\.\s*/u, "")  // A. B. C. D. E. F.
-    .replace(/^\s*[a-f]\.\s*/u, "")  // a. b. c. d. e. f.
-    .replace(/^\s*[A-F]\)\s*/u, "")  // A) B) C) D) E) F)
-    .replace(/^\s*[a-f]\)\s*/u, "")   // a) b) c) d) e) f)
-    .replace(/^\s*[A-F]:\s*/u, "")   // A: B: C: D: E: F:
-    .replace(/^\s*[a-f]:\s*/u, "")   // a: b: c: d: e: f:
-    .replace(/^\s*[A-F]\s+/, "")     // A B C D E F (มีช่องว่าง)
-    .replace(/^\s*[a-f]\s+/, "")     // a b c d e f (มีช่องว่าง)
-    .trim();
-
-  // แปลงรูปแบบ "ข้อ a และ b", "ข้อ b และ c" เป็น "ถูก 2 ข้อ" / "ถูก 3 ข้อ"
-  // รองรับ "ข้อ a และ b และ c" เป็นต้น
-  if (/^ข้อ\s*[a-fA-F]/.test(text)) {
-    // นับจำนวนตัวอักษร a-f หรือ A-F ที่พบ
-    const matches = text.match(/[a-fA-F]/gu);
-    if (matches && matches.length >= 2) {
-      const count = matches.length;
-      return `ถูก ${count} ข้อ`;
-    }
-  }
-
-  return text;
+function normalizeChoiceText(rawText) {
+  // ไม่ต้องแปลงหรือตัดอะไร เพียงแค่ trim ช่องว่าง
+  return rawText.trim();
 }
 
 function createTOCQuizForm2() {
@@ -1279,7 +1257,7 @@ function createTOCQuizForm2() {
 
     // สร้าง array ของ choices พร้อม index เดิม
     const choicesWithIndex = q.c.map((text, i) => ({
-      text: normalizeChoiceText(text, q.c.length),
+      text: normalizeChoiceText(text),
       originalIndex: i,
       isCorrect: i === q.a
     }));
@@ -1309,7 +1287,7 @@ function createTOCQuizForm2() {
       .setRequired(false);
     
     // ตั้งค่า feedback เพื่อแสดงเฉลย (ใช้ข้อความที่ถูก normalize แล้ว แต่ไม่ต้องใส่ zero-width space)
-    const correctAnswer = normalizeChoiceText(q.c[q.a], q.c.length);
+    const correctAnswer = normalizeChoiceText(q.c[q.a]);
     item.setFeedbackForCorrect(
       FormApp.createFeedback()
         .setText(`✓ คำตอบถูกต้อง!\n\nคำตอบที่ถูกต้องคือ: ${correctAnswer}`)
