@@ -8,31 +8,9 @@ function normalizeQuestionText(text) {
 }
 
 function normalizeChoiceText(rawText) {
-  // ตัด A. / B. / C. / D. / a) / b) / c) / d) / e) / f) นำหน้า (ครอบคลุมทุกรูปแบบ)
+  // คืนค่าเดิมโดยไม่ตัดหรือแปลงอะไร
   if (!rawText) return "";
-  // รวมเป็น regex เดียวที่ครอบคลุม: A. a. A) a) A: a: หรือ A/a ตามด้วย space
-  let text = rawText
-    .replace(/^\s*[A-Fa-f][.):]\s*/u, "")  // A. a. A) a) A: a: (ตัวพิมพ์ใหญ่/เล็ก + . ) :)
-    .replace(/^\s*[A-Fa-f]\s+/u, "")       // A B C D E F a b c d e f (ตามด้วย space)
-    .trim();
-
-  // แปลงรูปแบบ "ข้อ a และ b", "ข้อ b และ c" เป็น "ถูก 2 ข้อ" / "ถูก 3 ข้อ"
-  const refMatch = text.match(/^ข้อ\s*([a-f](?:\s*และ\s*[a-f])*)/iu);
-  if (refMatch) {
-    const letters = refMatch[1].match(/[a-f]/giu);
-    if (letters && letters.length > 0) {
-      const count = letters.length;
-      return `ถูก ${count} ข้อ`;
-    }
-  }
-
-  // แปลง "ทุกข้อถูก" เป็น "ถูก X ข้อ" (ถ้ามี)
-  if (text.includes("ทุกข้อถูก")) {
-    // ต้องนับจำนวนช้อยส์จริง ๆ แต่ตอนนี้ยังไม่รู้จำนวน ให้คงไว้ก่อน
-    // หรือถ้าต้องการเปลี่ยนเป็น "ถูก 4 ข้อ" สำหรับ 4 ช้อยส์
-  }
-
-  return text;
+  return rawText.trim();
 }
 
 function createTOCQuizForm() {
