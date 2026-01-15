@@ -6,30 +6,28 @@ function normalizeQuestionText(text) {
     .trim();
 }
 
-function normalizeChoiceText(rawText) {
+function normalizeChoiceText(rawText, totalChoices) {
   // ตัด A. / B. / C. / D. / E. / F. หรือ a) / b) / c) / d) / e) / f) นำหน้า (ครอบคลุมทุกรูปแบบ)
   let text = rawText
     .replace(/^\s*[A-F]\.\s*/u, "")  // A. B. C. D. E. F.
+    .replace(/^\s*[a-f]\.\s*/u, "")  // a. b. c. d. e. f.
+    .replace(/^\s*[A-F]\)\s*/u, "")  // A) B) C) D) E) F)
     .replace(/^\s*[a-f]\)\s*/u, "")   // a) b) c) d) e) f)
+    .replace(/^\s*[A-F]:\s*/u, "")   // A: B: C: D: E: F:
+    .replace(/^\s*[a-f]:\s*/u, "")   // a: b: c: d: e: f:
     .replace(/^\s*[A-F]\s+/, "")     // A B C D E F (มีช่องว่าง)
     .replace(/^\s*[a-f]\s+/, "")     // a b c d e f (มีช่องว่าง)
     .trim();
 
   // แปลงรูปแบบ "ข้อ a และ b", "ข้อ b และ c" เป็น "ถูก 2 ข้อ" / "ถูก 3 ข้อ"
   // รองรับ "ข้อ a และ b และ c" เป็นต้น
-  const refMatch = text.match(/^ข้อ\s*([a-f](?:\s*และ\s*[a-f])*)/iu);
-  if (refMatch) {
-    const letters = refMatch[1].match(/[a-f]/giu);
-    if (letters && letters.length > 0) {
-      const count = letters.length;
+  if (/^ข้อ\s*[a-fA-F]/.test(text)) {
+    // นับจำนวนตัวอักษร a-f หรือ A-F ที่พบ
+    const matches = text.match(/[a-fA-F]/gu);
+    if (matches && matches.length >= 2) {
+      const count = matches.length;
       return `ถูก ${count} ข้อ`;
     }
-  }
-
-  // แปลง "ทุกข้อถูก" เป็น "ถูก X ข้อ" (ถ้ามี)
-  if (text.includes("ทุกข้อถูก")) {
-    // ต้องนับจำนวนช้อยส์จริง ๆ แต่ตอนนี้ยังไม่รู้จำนวน ให้คงไว้ก่อน
-    // หรือถ้าต้องการเปลี่ยนเป็น "ถูก 6 ข้อ" สำหรับ 6 ช้อยส์
   }
 
   return text;
@@ -1281,7 +1279,7 @@ function createTOCQuizForm2() {
 
     // สร้าง array ของ choices พร้อม index เดิม
     const choicesWithIndex = q.c.map((text, i) => ({
-      text: normalizeChoiceText(text),
+      text: normalizeChoiceText(text, q.c.length),
       originalIndex: i,
       isCorrect: i === q.a
     }));
@@ -1311,7 +1309,7 @@ function createTOCQuizForm2() {
       .setRequired(false);
     
     // ตั้งค่า feedback เพื่อแสดงเฉลย (ใช้ข้อความที่ถูก normalize แล้ว แต่ไม่ต้องใส่ zero-width space)
-    const correctAnswer = normalizeChoiceText(q.c[q.a]);
+    const correctAnswer = normalizeChoiceText(q.c[q.a], q.c.length);
     item.setFeedbackForCorrect(
       FormApp.createFeedback()
         .setText(`✓ คำตอบถูกต้อง!\n\nคำตอบที่ถูกต้องคือ: ${correctAnswer}`)
